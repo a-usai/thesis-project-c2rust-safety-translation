@@ -4,7 +4,7 @@ Thesis project exploring the automated translation from C to Rust. It combines C
 ## Requirements
 
 - **Rust**: `1.96.0`
-- **Python**: `3.x`
+- **Python**: `3.9.6`
 
 ---
 
