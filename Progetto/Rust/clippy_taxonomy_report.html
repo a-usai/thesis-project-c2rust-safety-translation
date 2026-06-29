@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Report Dettagliato &mdash; Clippy Taxonomy Parser</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: #0d1117;
+        color: #e2e8f0;
+        min-height: 100vh;
+        padding: 2rem;
+        line-height: 1.5;
+    }
+
+    .container { max-width: 1440px; margin: 0 auto; }
+
+    /* ── Header ── */
+    .page-header {
+        text-align: center;
+        padding: 2.5rem 2rem;
+        margin-bottom: 2rem;
+        background: linear-gradient(135deg, #161b27 0%, #1a2035 50%, #161b27 100%);
+        border-radius: 16px;
+        border: 1px solid #2d3748;
+    }
+    .page-header h1 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #f0f4ff;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.35rem;
+    }
+    .page-header .subtitle {
+        font-size: 0.875rem;
+        color: #718096;
+        margin-bottom: 1.75rem;
+    }
+
+    /* ── Stat cards ── */
+    .stats-row {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    .stat-card {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+        padding: 0.8rem 1.4rem;
+        text-align: center;
+        min-width: 120px;
+    }
+    .stat-card .val {
+        font-size: 1.75rem;
+        font-weight: 700;
+        line-height: 1;
+        margin-bottom: 0.25rem;
+    }
+    .stat-card .lbl {
+        font-size: 0.68rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #718096;
+    }
+    .stat-total    .val { color: #63b3ed; }
+    .stat-internal .val { color: #68d391; }
+    .stat-external .val { color: #f687b3; }
+    .stat-unmapped .val { color: #f6ad55; }
+
+    /* ── Table wrapper ── */
+    .table-wrap {
+        background: #161b27;
+        border-radius: 14px;
+        border: 1px solid #2d3748;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    /* ── Section divider bars ── */
+    .section-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.6rem 1.25rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+    .section-bar.int { background: linear-gradient(90deg,#0d2a1e,#161b27); color: #68d391; border-top: 1px solid #2d3748; }
+    .section-bar.ext { background: linear-gradient(90deg,#1e1040,#161b27); color: #b794f4; border-top: 2px solid #2d3748; }
+    .section-bar.unm { background: linear-gradient(90deg,#2e1a06,#161b27); color: #f6ad55; border-top: 2px solid #2d3748; }
+
+    /* ── Table ── */
+    table { width: 100%; border-collapse: collapse; }
+
+    thead th {
+        padding: 0.72rem 1.1rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #4a5568;
+        background: rgba(0,0,0,0.25);
+        border-bottom: 1px solid #2d3748;
+        text-align: left;
+    }
+    thead th.center { text-align: center; }
+
+    tbody td {
+        padding: 0.82rem 1.1rem;
+        border-bottom: 1px solid rgba(45,55,72,0.4);
+        vertical-align: top;
+        font-size: 0.82rem;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: rgba(255,255,255,0.025); transition: background 0.15s; }
+
+    .td-cat  { font-weight: 600; color: #cbd5e0; width: 210px; min-width: 180px; }
+    .td-lint { width: 250px; min-width: 190px; }
+    .td-cnt  { width: 88px; text-align: center; }
+    .td-desc { color: #94a3b8; line-height: 1.65; }
+
+    /* ── Lint tags ── */
+    .lint-tag {
+        display: inline-block;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        font-size: 0.7rem;
+        background: rgba(99,179,237,0.09);
+        color: #63b3ed;
+        border: 1px solid rgba(99,179,237,0.2);
+        border-radius: 4px;
+        padding: 0.12rem 0.42rem;
+        margin: 1px 0;
+        white-space: nowrap;
+        line-height: 1.7;
+    }
+    .lint-tag.compiler {
+        background: rgba(246,173,85,0.09);
+        color: #f6ad55;
+        border-color: rgba(246,173,85,0.25);
+    }
+    .no-lint { color: #4a5568; font-style: italic; }
+
+    /* ── Count badge ── */
+    .badge {
+        display: inline-block;
+        font-weight: 700;
+        font-size: 0.82rem;
+        border-radius: 20px;
+        padding: 0.18rem 0.72rem;
+        min-width: 2.2rem;
+        text-align: center;
+    }
+    .badge-zero { background: rgba(74,85,104,0.2);   color: #4a5568; border: 1px solid rgba(74,85,104,0.3); }
+    .badge-low  { background: rgba(246,173,85,0.13);  color: #f6ad55; border: 1px solid rgba(246,173,85,0.28); }
+    .badge-high { background: rgba(252,129,129,0.13); color: #fc8181; border: 1px solid rgba(252,129,129,0.28); }
+    .badge-unm  { background: rgba(246,173,85,0.18);  color: #ed8936; border: 1px solid rgba(246,173,85,0.4); }
+
+    /* ── Row states ── */
+    .row-zero td { opacity: 0.5; }
+    .row-unm  td { background: rgba(246,173,85,0.03); }
+    .row-total td {
+        background: rgba(0,0,0,0.3);
+        border-top: 2px solid #2d3748 !important;
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+    .row-total .td-cnt { color: #63b3ed; font-size: 1.05rem; text-align: center; }
+
+    /* ── Footer ── */
+    .page-footer { text-align: center; margin-top: 2rem; font-size: 0.72rem; color: #4a5568; }
+
+    .file-card {
+        background: #161b27;
+        border-radius: 12px;
+        border: 1px solid #2d3748;
+        overflow: hidden;
+        margin-bottom: 1.25rem;
+    }
+    .file-hdr {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.72rem 1.2rem;
+        background: rgba(0,0,0,0.3);
+        border-bottom: 1px solid #2d3748;
+    }
+    .file-path {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        color: #90cdf4;
+        flex: 1;
+        word-break: break-all;
+    }
+    .file-cnt {
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: rgba(99,179,237,0.1);
+        color: #63b3ed;
+        border: 1px solid rgba(99,179,237,0.2);
+        border-radius: 10px;
+        padding: 0.12rem 0.55rem;
+        white-space: nowrap;
+    }
+    .td-line {
+        font-family: 'JetBrains Mono', monospace;
+        color: #718096;
+        white-space: nowrap;
+        width: 70px;
+        font-size: 0.78rem;
+    }
+    .td-catbadge { width: 240px; }
+    .td-lintcode { width: 220px; }
+    .td-msg { color: #94a3b8; line-height: 1.55; font-size: 0.8rem; }
+    .cat-pill {
+        display: inline-block;
+        border-radius: 6px;
+        padding: 0.18rem 0.55rem;
+        font-size: 0.7rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+    .lint-code {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.72rem;
+        background: rgba(99,179,237,0.08);
+        color: #63b3ed;
+        border: 1px solid rgba(99,179,237,0.15);
+        border-radius: 4px;
+        padding: 0.12rem 0.38rem;
+        white-space: nowrap;
+    }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="page-header">
+    <h1>Report Dettagliato &mdash; Clippy Taxonomy Parser</h1>
+    <p class="subtitle">Tassonomia: Tadesse et al. (18 categorie) &middot; Rust Code Analysis</p>
+    <div class="stats-row">
+      <div class="stat-card stat-total">
+        <div class="val">0</div><div class="lbl">Violazioni Totali</div>
+      </div>
+      <div class="stat-card stat-internal">
+        <div class="val">0</div><div class="lbl">File Analizzati</div>
+      </div>
+    </div>
+  </div>
+
+  
+
+  <div class="page-footer">
+    Generato il 2026-06-26 18:59:40 &middot; clippy_taxonomy_parser.py
+  </div>
+
+</div>
+</body>
+</html>

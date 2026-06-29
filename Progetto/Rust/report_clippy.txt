@@ -1,0 +1,16 @@
+warning: type `size_t` should have an upper camel case name
+  --> src/main.rs:17:10
+   |
+17 | pub type size_t = libc::c_ulong;
+   |          ^^^^^^ help: convert the identifier to upper camel case: `SizeT`
+   |
+   = note: `#[warn(non_camel_case_types)]` (part of `#[warn(nonstandard_style)]`) on by default
+
+warning: type `png_alloc_size_t` should have an upper camel case name
+  --> src/main.rs:18:10
+   |
+18 | pub type png_alloc_size_t = size_t;
+   |          ^^^^^^^^^^^^^^^^ help: convert the identifier to upper camel case: `PngAllocSizeT`
+
+warning: `Rust` (bin "Rust") generated 2 warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.14s
