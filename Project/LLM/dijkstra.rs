@@ -9,7 +9,7 @@
 //     magic number 999 / INT_MAX del codice C2Rust.
 //   • Zero unsafe, zero libc, zero stato globale mutabile.
 // ─────────────────────────────────────────────────────────────────────────────
-
+// UTILIZZARE VERSIONE RECENTE PER UN CORRETTO UTILIZZO
 use std::cmp::Reverse;
 use std::collections::BinaryHeap;
 use std::io::{self, Read};
